@@ -7,7 +7,7 @@
  * Apache's mod rewrite.
  *
  * @author scottayy@gmail.com
- * @author Daiel Lopretto (http://daniellopretto.com)
+ * @author Daniel Lopretto (http://daniellopretto.com)
  *
  */
 class SafeUrl {
