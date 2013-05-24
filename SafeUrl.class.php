@@ -89,6 +89,19 @@ class SafeUrl {
     }
 
     /**
+     * Helper method that uses the translation table to convert 
+     * non-ascii characters to a resonalbe alternative.
+     *
+     * @param string $text
+     * @return string
+     */
+    function converCharacters($text) {
+        $text = html_entity_decode($text, ENT_QUOTES, $this->decode_charset);
+        $text = strtr($text, $this->translation_table);
+        return $text;
+    }
+
+    /**
      * the worker function
      *
      * @param string $text
@@ -99,8 +112,7 @@ class SafeUrl {
         $s = $this->separator;
         //prepare the string according to our options
         if ($this->decode) {
-            $text = html_entity_decode($text, ENT_QUOTES, $this->decode_charset);
-            $text = strtr($text, $this->translation_table);
+            $text = $this->converCharacters($text);
         }
 
         if ($this->lowercase) {
