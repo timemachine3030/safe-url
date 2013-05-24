@@ -30,6 +30,13 @@ class SafeUrlTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testMakeUrl() {
+
+            $this->object->lowercase = false;
+            $this->assertEquals( $this->object->makeUrl(
+                $this->object->convertCharacters("Vivid Recollections")),
+                "Vivid-Recollections");
+
+            $this->object->lowercase = true;
         
             $this->assertEquals( $this->object->makeUrl(
                 'i\'m a test string!! do u like me. or not......., billy bob!!@#'),

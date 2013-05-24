@@ -1,4 +1,3 @@
-
 <?php
 
 /**
@@ -95,7 +94,7 @@ class SafeUrl {
      * @param string $text
      * @return string
      */
-    function converCharacters($text) {
+    function convertCharacters($text) {
         $text = html_entity_decode($text, ENT_QUOTES, $this->decode_charset);
         $text = strtr($text, $this->translation_table);
         return $text;
@@ -112,7 +111,7 @@ class SafeUrl {
         $s = $this->separator;
         //prepare the string according to our options
         if ($this->decode) {
-            $text = $this->converCharacters($text);
+            $text = $this->convertCharacters($text);
         }
 
         if ($this->lowercase) {
