@@ -2,11 +2,12 @@
 
 /**
  * This short class will turn user entered titles into URLs
- * that are keyword rich and human readable.  For use with
+ * that are keyword rich and human readable.  For use with
  * Apache's mod rewrite.
  *
  * @author scottayy@gmail.com
  * @author Daniel Lopretto (http://daniellopretto.com)
+ * @author Adrián Granado (https://github.com/playmono)
  *
  */
 class SafeUrl {
@@ -14,48 +15,48 @@ class SafeUrl {
      * decode html entities in string?
      * @var boolean
      */
-    var $decode = true;
+    static $decode = true;
     /**
      * charset to use if $decode is set to true
      * @var string
      */
-    var $decode_charset = 'UTF-8';
+    static $decode_charset = 'UTF-8';
     /**
      * turns string into all lowercase letters
      * @var boolean
      */
-    var $lowercase = true;
+    static $lowercase = true;
     /**
      * strip out html tags from string?
      * @var boolean
      */
-    var $strip = true;
+    static $strip = true;
     /**
      * maximum length of resulting title
      * @var int
      */
-    var $maxlength = 50;
+    static $maxlength = 50;
     /**
      * if maxlength is reached, chop at nearest whole word? or hard chop?
      * @var boolean
      */
-    var $whole_word = true;
+    static $whole_word = true;
     /**
      * what title to use if no alphanumeric characters can be found
      * @var string
      */
-    var $blank = 'no-title';
+    static $blank = 'no-title';
     /**
      * Allow a differnt character to be used as the separator.
      * @var string
      */
-    var $separator = '-';
+    static $separator = '-';
     /**
      * A table of UTF-8 characters and what to make them.
      * @link http://www.php.net/manual/en/function.strtr.php#90925
      * @var array
      */
-    var $translation_table = array(
+    static $translation_table = array(
         'Š'=>'S', 'š'=>'s', 'Đ'=>'Dj','Ð'=>'Dj','đ'=>'dj', 'Ž'=>'Z', 'ž'=>'z', 'Č'=>'C', 'č'=>'c', 'Ć'=>'C', 'ć'=>'c',
         'À'=>'A', 'Á'=>'A', 'Â'=>'A', 'Ã'=>'A', 'Ä'=>'A', 'Å'=>'A', 'Æ'=>'A', 'Ç'=>'C', 'È'=>'E', 'É'=>'E',
         'Ê'=>'E', 'Ë'=>'E', 'Ì'=>'I', 'Í'=>'I', 'Î'=>'I', 'Ï'=>'I', 'Ñ'=>'N', 'Ò'=>'O', 'Ó'=>'O', 'Ô'=>'O',
@@ -82,7 +83,7 @@ class SafeUrl {
     function SafeUrl( $options='' ) {
         if (is_array($options)) {
             foreach($options as $property => $value) {
-                $this->$property = $value;
+                static::$property = $value;
             }
         }
     }
@@ -94,9 +95,9 @@ class SafeUrl {
      * @param string $text
      * @return string
      */
-    function convertCharacters($text) {
-        $text = html_entity_decode($text, ENT_QUOTES, $this->decode_charset);
-        $text = strtr($text, $this->translation_table);
+    static function convertCharacters($text) {
+        $text = html_entity_decode($text, ENT_QUOTES, static::$decode_charset);
+        $text = strtr($text, static::$translation_table);
         return $text;
     }
 
@@ -106,18 +107,18 @@ class SafeUrl {
      * @param string $text
      * @return string
      */
-    function makeUrl($text) {
+    static function makeUrl($text) {
         //Shortcut
-        $s = $this->separator;
+        $s = static::$separator;
         //prepare the string according to our options
-        if ($this->decode) {
-            $text = $this->convertCharacters($text);
+        if (static::$decode) {
+            $text = static::convertCharacters($text);
         }
 
-        if ($this->lowercase) {
+        if (static::$lowercase) {
             $text = strtolower($text);
         }
-        if ($this->strip) {
+        if (static::$strip) {
             $text = strip_tags($text);
         }
 
@@ -127,10 +128,10 @@ class SafeUrl {
         $text = trim(preg_replace("/{$s}{2,}/", $s, $text), $s);
 
         //chop?
-        if (strlen($text) > $this->maxlength) {
-            $text = substr($text, 0, $this->maxlength);
+        if (strlen($text) > static::$maxlength) {
+            $text = substr($text, 0, static::$maxlength);
 
-            if ($this->whole_word) {
+            if (static::$whole_word) {
                 /**
                  * If maxlength is small and leaves us with only part of one
                  * word ignore the "whole_word" filtering.
