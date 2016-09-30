@@ -83,7 +83,7 @@ class SafeUrl {
      * @param array $options
      * @return string
      */
-    static protected function convertCharacters($text) {
+    static public function convertCharacters($text) {
         $text = html_entity_decode($text, ENT_QUOTES, static::$decode_charset);
         $text = strtr($text, static::$translation_table);
         return $text;
@@ -98,7 +98,7 @@ class SafeUrl {
     static public function makeUrl($text, $options = null) {
         if (is_array($options)) {
             foreach($options as $property => $value) {
-                static::$property = $value;
+                static::$$property = $value;
             }
         }
 
