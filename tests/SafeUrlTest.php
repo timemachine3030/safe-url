@@ -6,7 +6,6 @@ class SafeUrlTest extends PHPUnit_Framework_TestCase {
     /**
      * @var SafeUrl
      */
-    protected $object;
 
     public function testMakeUrl() {
         $this->assertEquals( SafeUrl::makeUrl(
