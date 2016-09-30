@@ -76,26 +76,14 @@ class SafeUrl {
     );
 
     /**
-     * Class constructor
-     *
-     * @param array $options
-     */
-    function SafeUrl( $options='' ) {
-        if (is_array($options)) {
-            foreach($options as $property => $value) {
-                static::$property = $value;
-            }
-        }
-    }
-
-    /**
      * Helper method that uses the translation table to convert 
      * non-ascii characters to a resonalbe alternative.
      *
      * @param string $text
+     * @param array $options
      * @return string
      */
-    static function convertCharacters($text) {
+    static protected function convertCharacters($text) {
         $text = html_entity_decode($text, ENT_QUOTES, static::$decode_charset);
         $text = strtr($text, static::$translation_table);
         return $text;
@@ -107,7 +95,13 @@ class SafeUrl {
      * @param string $text
      * @return string
      */
-    static function makeUrl($text) {
+    static public function makeUrl($text, $options = null) {
+        if (is_array($options)) {
+            foreach($options as $property => $value) {
+                static::$property = $value;
+            }
+        }
+
         //Shortcut
         $s = static::$separator;
         //prepare the string according to our options
