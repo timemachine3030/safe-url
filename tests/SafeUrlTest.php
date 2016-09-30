@@ -3,9 +3,6 @@
 use PHPUnit\Framework\TestCase;
 
 class SafeUrlTest extends PHPUnit_Framework_TestCase {
-    /**
-     * @var SafeUrl
-     */
 
     public function testMakeUrl() {
         $this->assertEquals( SafeUrl::makeUrl(
