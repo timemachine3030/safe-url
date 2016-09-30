@@ -1,147 +1,99 @@
 <?php
 
-/**
- * This short class will turn user entered titles into URLs
- * that are keyword rich and human readable.  For use with
- * Apache's mod rewrite.
- *
- * @author scottayy@gmail.com
- * @author Daniel Lopretto (http://daniellopretto.com)
- * @author Adrián Granado (https://github.com/playmono)
- *
- */
-class SafeUrl {
+use PHPUnit\Framework\TestCase;
+
+class SafeUrlTest extends PHPUnit_Framework_TestCase {
     /**
-     * decode html entities in string?
-     * @var boolean
+     * @var SafeUrl
      */
-    static $decode = true;
-    /**
-     * charset to use if $decode is set to true
-     * @var string
-     */
-    static $decode_charset = 'UTF-8';
-    /**
-     * turns string into all lowercase letters
-     * @var boolean
-     */
-    static $lowercase = true;
-    /**
-     * strip out html tags from string?
-     * @var boolean
-     */
-    static $strip = true;
-    /**
-     * maximum length of resulting title
-     * @var int
-     */
-    static $maxlength = 50;
-    /**
-     * if maxlength is reached, chop at nearest whole word? or hard chop?
-     * @var boolean
-     */
-    static $whole_word = true;
-    /**
-     * what title to use if no alphanumeric characters can be found
-     * @var string
-     */
-    static $blank = 'no-title';
-    /**
-     * Allow a differnt character to be used as the separator.
-     * @var string
-     */
-    static $separator = '-';
-    /**
-     * A table of UTF-8 characters and what to make them.
-     * @link http://www.php.net/manual/en/function.strtr.php#90925
-     * @var array
-     */
-    static $translation_table = array(
-        'Š'=>'S', 'š'=>'s', 'Đ'=>'Dj','Ð'=>'Dj','đ'=>'dj', 'Ž'=>'Z', 'ž'=>'z', 'Č'=>'C', 'č'=>'c', 'Ć'=>'C', 'ć'=>'c',
-        'À'=>'A', 'Á'=>'A', 'Â'=>'A', 'Ã'=>'A', 'Ä'=>'A', 'Å'=>'A', 'Æ'=>'A', 'Ç'=>'C', 'È'=>'E', 'É'=>'E',
-        'Ê'=>'E', 'Ë'=>'E', 'Ì'=>'I', 'Í'=>'I', 'Î'=>'I', 'Ï'=>'I', 'Ñ'=>'N', 'Ò'=>'O', 'Ó'=>'O', 'Ô'=>'O',
-        'Õ'=>'O', 'Ö'=>'O', 'Ø'=>'O', 'Ù'=>'U', 'Ú'=>'U', 'Û'=>'U', 'Ü'=>'U', 'Ý'=>'Y', 'Þ'=>'B', 'ß'=>'Ss',
-        'à'=>'a', 'á'=>'a', 'â'=>'a', 'ã'=>'a', 'ä'=>'a', 'å'=>'a', 'æ'=>'a', 'ç'=>'c', 'è'=>'e', 'é'=>'e',
-        'ê'=>'e', 'ë'=>'e', 'ì'=>'i', 'í'=>'i', 'î'=>'i', 'ï'=>'i', 'ð'=>'o', 'ñ'=>'n', 'ò'=>'o', 'ó'=>'o',
-        'ô'=>'o', 'õ'=>'o', 'ö'=>'o', 'ø'=>'o', 'ù'=>'u', 'ú'=>'u', 'û'=>'u', 'ý'=>'y', 'ý'=>'y', 'þ'=>'b',
-        'ÿ'=>'y', 'Ŕ'=>'R', 'ŕ'=>'r',
+    protected $object;
+
+    public function testMakeUrl() {
+        $this->assertEquals( SafeUrl::makeUrl(
+            SafeUrl::convertCharacters("Vivid Recollections"), ['lowercase' => false]),
+            "Vivid-Recollections");
+    
+        $this->assertEquals( SafeUrl::makeUrl(
+            'i\'m a test string!! do u like me. or not......., billy bob!!@#', ['lowercase' => true]),
+            'im-a-test-string-do-u-like-me-or-not-billy-bob');
+
+        $this->assertEquals( SafeUrl::makeUrl(
+            '<b>some HTML</b> in <i>here</i>!!~'),
+            'some-html-in-here');
+
+        $this->assertEquals( SafeUrl::makeUrl(
+            'i!@#*#@ l#*(*(#**$*o**(*^v^*(e d//////e\\\\\\\\v,,,,,,,,,,n%$#@!~e*(+=t'),
+            'i-love-devnet');
+
+        $this->assertEquals( SafeUrl::makeUrl(
+            'A lOng String wiTh a buNchess of words thats! should be -chopped- at the last whole word'),
+            'a-long-string-with-a-bunchess-of-words-thats');
+
+        $this->assertEquals( SafeUrl::makeUrl(
+            'Eyjafjallajökull Glacier', ['lowercase' => false]),
+            'Eyjafjallajokull-Glacier');
+
+        $this->assertEquals( SafeUrl::makeUrl(
+            'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûýýþÿŔŕ', ['maxlength' => 100]),
+            'AAAAAAACEEEEIIIIDjNOOOOOOUUUUYBSsaaaaaaaceeeeiiiionoooooouuuyybyRr');
+
+        $this->assertEquals( SafeUrl::makeUrl(
+                $this->big_mess, ['maxlength' => 20]),
+                'safeurl-new-safeurl');
+
         /**
-         * Special characters:
+         * Regresstion test:
+         *
+         * If max length was so small that we where left with only one
+         * word, then whole_word would leave us with an empty string.
          */
-        "'"    => '',       // Single quote
-        '&'    => ' and ',  // Amperstand
-        "\r\n" => ' ',      // Newline
-        "\n"   => ' '       // Newline
+        $this->assertEquals( SafeUrl::makeUrl(
+            'supercalafragalisticexpialadoshus', ['maxlength' => 5, 'whole_word' => true]),
+            'super');
+        
 
-    );
-
-    /**
-     * Helper method that uses the translation table to convert 
-     * non-ascii characters to a resonalbe alternative.
-     *
-     * @param string $text
-     * @param array $options
-     * @return string
-     */
-    static public function convertCharacters($text) {
-        $text = html_entity_decode($text, ENT_QUOTES, static::$decode_charset);
-        $text = strtr($text, static::$translation_table);
-        return $text;
+        /**
+         * Acceptable Bug:
+         *
+         * It would be nice if we put a space between block level elements,
+         * but it is kind of too much to ask for.
+         */
+        $html = <<<HTML
+            <div>
+                <h1>Title</h1>
+                <h2>Subtitle!</h2>Read the <a href="ReleaseNotes.html">Release Notes</a> for this Revision.<br/>
+            </div>
+HTML;
+        $this->assertEquals( SafeUrl::makeUrl(
+                $html, ['maxlength' => 200]),
+                'Title-SubtitleRead-the-Release-Notes-for-this-Revision');
+        /**                    ^
+         * Look: --------------|
+         *
+         * Should be:
+         *     'Title-Subtitle-Read-the-Release-Notes-for-this-Revision'
+         */
     }
-
-    /**
-     * the worker function
-     *
-     * @param string $text
-     * @return string
-     */
-    static public function makeUrl($text, $options = null) {
-        if (is_array($options)) {
-            foreach($options as $property => $value) {
-                static::$$property = $value;
-            }
-        }
-
-        //Shortcut
-        $s = static::$separator;
-        //prepare the string according to our options
-        if (static::$decode) {
-            $text = static::convertCharacters($text);
-        }
-
-        if (static::$lowercase) {
-            $text = strtolower($text);
-        }
-        if (static::$strip) {
-            $text = strip_tags($text);
-        }
-
-        //filter
-        $text = preg_replace("/[^&a-z0-9_-\s']/i", '', $text);
-        $text = str_replace(' ', $s, $text);
-        $text = trim(preg_replace("/{$s}{2,}/", $s, $text), $s);
-
-        //chop?
-        if (strlen($text) > static::$maxlength) {
-            $text = substr($text, 0, static::$maxlength);
-
-            if (static::$whole_word) {
-                /**
-                 * If maxlength is small and leaves us with only part of one
-                 * word ignore the "whole_word" filtering.
-                 */
-                $words = explode($s, $text);
-                $temp  = implode($s, array_diff($words, array(array_pop($words))));
-                if ($temp != '') {
-                    $text = $temp;
-                }
-            }
-        }
-        //return =]
-        if ($text == '') {
-            return null;
-        }
-
-        return $text;
-    }
+    
+    var $big_mess = '
+            </span></li><li style=\"\" class=\"li2\"><span style=\"color:
+            #ff0000;\">\$safeurl = new safeurl(); </span></li><li style=\"\"
+            class=\"li1\"><span style=\"color: #ff0000;\">\$safeurl->lowercase
+            = false;</span></li><li style=\"\" class=\"li2\"><span
+            style=\"color: #ff0000;\">\$safeurl->whole_word = false;</span></li>
+            <li style=\"\" class=\"li1\">&nbsp;</li><li style=\"\"
+            class=\"li2\"><span style=\"color: #ff0000;\">\$tests = array(
+            </span></li><li style=\"\" class=\"li1\"><span style=\"color:
+            #ff0000;\"> &nbsp; &nbsp; &nbsp; &nbsp;\'</span>i\span
+            style=\"color: #ff0000;\">\'m a test string!! do u like me. or
+            not......., billy bob!!@#\'</span>, </li><li style=\"\"
+            class=\"li2\">&nbsp; &nbsp; &nbsp; &nbsp; <span
+            style=\"color: #ff0000;\">\'<b>some HTML</b> in <i>here</i>!!~\'
+            </span>, </li><li style=\"\" class=\"li1\">&nbsp; &nbsp; &nbsp;
+            &nbsp; <span style=\"color: #ff0000;\">\'i!@#*#@ l#*(*(#**$*o**(*^v
+            ^*(e d//////e<span style=\"color: #000099; font-weight: bold;\">\\
+            </span><span style=\"color: #000099; font-weight: bold;\">\\</span>
+            <span style=\"color: #000099; font-weight: bold;\">\\</span><span
+            style=\"color: #000099; font-weight: bold;\">\\</span>v,,,,,,,,,,n%
+            $#@!~e*(+=t\'</span>,</li>';
 }
